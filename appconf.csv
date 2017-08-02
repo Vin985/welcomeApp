@@ -1,3 +1,4 @@
-"id";"url"
-"geoavir";"http://127.0.0.1:8080"
-"cruisereport";"http://127.0.0.1:8082"
+"id";"url";"private"
+"geoavirweb";"http://127.0.0.1:8080";"false"
+"cruisecompare";"http://127.0.0.1:8082";"false"
+"urgences";"http://127.0.0.1:3838";"true"

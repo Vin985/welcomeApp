@@ -9,9 +9,9 @@ library(shiny)
 
 
 shinyUI(fluidPage(
-  tags$head(
-    tags$link(rel = "stylesheet", type = "text/css", href = "assets/css/style.css")
-  ),
-    uiOutput("main")
+  useShinyjs(),
+  includeCSS("www/css/styles.css"),
+  uiOutput("showlogin"),
+  uiOutput("main")
   )
 )
