@@ -66,14 +66,14 @@ uiTabPanelChangePassword <- function(){
 
 
 loginModal <- function(userInfo) {
-  modalDialog(h1("Connexion à GeoAviRWeb"), br(),
+  modalDialog(div(class = "loginmodal-container", h1(geti18nValue("portal.login", userInfo$lang)), br(),
               div(
-                textInput("userName", "Nom utilisateur:", placeholder = "Username"),
-                passwordEncryptedInput("passwd", "Mot de passe:"),
+                textInput("userName", geti18nValue("username", userInfo$lang), placeholder = geti18nValue("username", userInfo$lang)),
+                passwordEncryptedInput("passwd", geti18nValue("password", userInfo$lang)),
                 br(),
-                actionButton("Login", "Se connecter", class = "btn btn-primary action-button login loginmodal-submit"),
+                actionButton("loginAction", geti18nValue("login", userInfo$lang), class = "btn btn-primary action-button login loginmodal-submit"),
                 htmlOutput("loginError")
-              ),
+              )),
               div(class = "login-help"), footer = NULL,
               easyClose = TRUE)
 }

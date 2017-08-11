@@ -6,7 +6,7 @@
 
 library(shiny)
 
-source("serverRender.R")
+
 
 
 
@@ -35,11 +35,11 @@ selectAppHandler <- function(input, output, session, userInfo) {
 
 ## Main function
 shinyServer(function(input, output, session) {
-  source("loginServer.R", local = TRUE, encoding = "utf-8")
 
   userInfo <- reactiveValues()
   userInfo$selectedApp <- NULL
   userInfo$logged <- FALSE
+  userInfo$admin <- FALSE
 
   # Language handlers
   checkQueryLanguage(session, userInfo)
@@ -51,6 +51,9 @@ shinyServer(function(input, output, session) {
   # App selection handler
   selectAppHandler(input, output, session, userInfo)
 
+  # login logic
+  loginServer(input, output, session, userInfo)
+
   # Change page observer
   observe({
     # This line is needed to make sure the observe is rerun when the language change
@@ -60,7 +63,7 @@ shinyServer(function(input, output, session) {
 
 
   observeEvent(input$login, {
-    showModal(loginModal(userInfo))
+    showModal(div(class="login", loginModal(userInfo)))
   })
 
   # Listener to the go to app button
