@@ -14,7 +14,7 @@ ROOT_DIR <- "C:/dev/EC/welcomeApp"
 DB_DIR <- file.path(ROOT_DIR, "db")
 DB_FILE <- "User.sqlite"
 
-source("serverRender.R")
+source("pagesRender.R")
 source("loginUI.R", encoding = "UTF-8")
 source("loginServer.R", encoding = "UTF-8")
 source("dbutils.R", encoding = "UTF-8")

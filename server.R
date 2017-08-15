@@ -62,10 +62,6 @@ shinyServer(function(input, output, session) {
   })
 
 
-  observeEvent(input$login, {
-    showModal(div(class="login", loginModal(userInfo)))
-  })
-
   # Listener to the go to app button
   observeEvent(input$goToApp, {
     app <- isolate(userInfo$selectedApp)

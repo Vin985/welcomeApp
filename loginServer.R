@@ -25,49 +25,21 @@ isEmailValid <- function(emailToBeChecked) {
 }
 
 loginServer <- function(input, output, session, userInfo) {
-  #=============================================================================================================================================
-  ## Login/logout per-session status and reactive value
-  #
-  Logged = FALSE
-  USER <- reactiveValues(Logged = Logged, Admin = FALSE)
 
-  #=============================================================================================================================================
-  ## component-less UI object to manage the Login/logout status
-  #
-  output$loggedIn <- reactive({
-    #print("we are in reactive logedIn")
-    if (USER$Logged) {
-      return("true")
-    } else{
-      return("false")
-    }
+  loginRender(input, output, session, userInfo)
+
+  observeEvent(input$login, {
+    showModal(div(class="login", loginModal(userInfo)))
   })
-
-  outputOptions(output, "loggedIn", suspendWhenHidden = FALSE)
-
-
-  #=============================================================================================================================================
-  ## component-less UI object to manage the Login/logout status
-  #
-  output$role <- reactive({
-    #print("we are in reactive logedIn")
-    if (USER$Logged) {
-      if (isAdmin(USER$username, USER$password))
-        return("admin")
-    }
-    return("user")
-  })
-
-  outputOptions(output, "role", suspendWhenHidden = FALSE)
 
 
   #==============================================================================================================================================
   ## logout
   #
   observeEvent(input$logoutbutton, {
-    USER$Logged <- FALSE
-    USER$Admin  <- TRUE
-    stop("'session' is not a ShinySession object.")
+    userInfo$logged <- FALSE
+    userInfo$admin  <- FALSE
+    # stop("'session' is not a ShinySession object.")
   })
 
 
@@ -108,26 +80,56 @@ loginServer <- function(input, output, session, userInfo) {
   ## login
   #
 
-  output$loginError <- renderUI({
-    print("in output$loginError")
-
-    if (!userInfo$logged &&
-        !is.null(input$loginAction) && input$loginAction > 0) {
+  observeEvent(input$loginAction, {
+    print("in observe loginAction")
+    if (!isolate(userInfo$logged)) {
 
       username <- isolate(input$userName)
       password <- isolate(input$passwd)
 
-      if (credentialsMatch(username = username, password = password)) {
-        USER$username <- username
-        USER$password <- password
-        USER$Logged <- TRUE
-        if (isAdmin(username, password)) {
-          USER$Admin <- TRUE
-          br()
+      creds <- credentialsMatch(username = username, password = password)
+
+      if (creds > 0) {
+        userInfo$logged <- TRUE
+        userInfo$username <- username
+        if (creds == 2) {
+          userInfo$admin <- TRUE
         }
-      } else  {
-        span(geti18nValue("login.error", userInfo$lang), class = "text-danger")
+        removeModal(session)
+      } else {
+        userInfo$loginError <- creds
       }
+    }
+  }, ignoreInit = TRUE)
+
+
+}
+
+loginRender <- function(input, output, session, userInfo) {
+
+  output$login <- renderUI({
+    if (!userInfo$logged) {
+      actionLink("login", geti18nValue("login", userInfo$lang))
+    } else {
+      username <- isolate(userInfo$username)
+      if (is.null(username)) {
+        username <- ""
+      }
+      tagList(textOutput2(content = paste(geti18nValue("welcome.user", userInfo$lang), username)),
+              if (userInfo$admin) {
+                actionLink("adminPage", geti18nValue("admin.page", userInfo$lang))
+              } else {
+                ""
+              },
+              actionLink("logout", geti18nValue("logout", userInfo$lang)))
+    }
+  })
+
+  output$loginError <- renderUI({
+    error <- userInfo$loginError
+    print("in output$loginError")
+    if (!is.null(error)) {
+      span(geti18nValue(paste0("login.error", error), userInfo$lang), class = "text-danger")
     }
   })
 
@@ -178,7 +180,6 @@ loginServer <- function(input, output, session, userInfo) {
 
   #==============================================================================================================================================
   ## Admin section
-  #
   output$loginSection <- renderUI({
     if (USER$Logged == FALSE) {
       return(uiLoginMOdalDialog())

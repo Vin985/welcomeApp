@@ -2,6 +2,15 @@ require(shiny)
 require(shinyjs)
 require(ecapputils)
 
+generateApplicationLinks <- function(userInfo) {
+  if (!is.null(EC_APP_CONF)) {
+    lapply(names(EC_APP_CONF), function(x, userInfo) {
+      if (as.logical(!EC_APP_CONF[[x]]$private) || userInfo$logged) {
+        actionButton(paste0(x, "App"), geti18nValue(paste0(x, ".app"), userInfo$lang), class = "appLink btn-block text-capitalize h2")
+      }
+    }, userInfo)
+  }
+}
 
 selectLanguagePage <- function(input, output, session, userInfo) {
   lang <- userInfo$lang
@@ -36,22 +45,8 @@ selectLanguagePage <- function(input, output, session, userInfo) {
   })
 }
 
-generateApplicationLinks <- function(userInfo) {
-  if (!is.null(EC_APP_CONF)) {
-    lapply(names(EC_APP_CONF), function(x, userInfo) {
-      if (as.logical(!EC_APP_CONF[[x]]$private) || userInfo$logged) {
-        actionButton(paste0(x, "App"), geti18nValue(paste0(x, ".app"), userInfo$lang), class = "appLink btn-block text-capitalize h2")
-      }
-    }, userInfo)
-  }
-}
-
 selectApplicationPage <-
   function(input, output, session, userInfo) {
-
-    output$login <- renderUI({
-      actionLink("login", geti18nValue("login", userInfo$lang))
-    })
 
     output$toolBar <- renderUI({
       fluidRow(class = "topRow",
@@ -94,3 +89,5 @@ selectApplicationPage <-
               }))
     })
   }
+
+

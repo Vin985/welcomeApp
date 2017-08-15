@@ -185,13 +185,25 @@ credentialsMatch <- function(db = DB_POOL,
   cat("in: ", "credentialsmatch", "\n")
   a <- getUser(db, username = username)
 
-  if (is.na(a$username[1]))
-    return(FALSE)
+  if (is.na(a$username[1])) {
+    # User does not exist
+    return(0)
+  }
 
-  if (username == a$username[1] & password == a$password[1])
-    return(TRUE)
-  else
-    return(FALSE)
+  # Check credentials
+  if (username == a$username[1] & password == a$password[1]) {
+    if (a$admin == 1) {
+      # User is admin
+      return(2)
+    } else {
+      # Normal user
+      return(1)
+    }
+  } else {
+    # Wrong password
+    return(-1)
+  }
+
 }
 
 ##
