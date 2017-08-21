@@ -3,7 +3,7 @@
 # create table user
 createTableUser <- function(db = DB_POOL) {
   tryCatch({
-    cat("in: ", "createTableUser", "\n")
+    # cat("in: ", "createTableUser", "\n")
     dbExecute(
       conn = db,
       "CREATE TABLE IF NOT EXISTS `User` (
@@ -24,7 +24,7 @@ createTableUser <- function(db = DB_POOL) {
 # initialize user DB: connect and creatTable if not exists
 #
 initDB <- function(dbdir, dbfile) {
-  cat("in: ", "initdb", "\n")
+  # cat("in: ", "initdb", "\n")
   if (!dir.exists((dbdir))) {
     dir.create(dbdir)
   }
@@ -40,7 +40,7 @@ addUser <- function(db = DB_POOL,
                     username = "",
                     email = "",
                     password = "") {
-  cat("in: ", "adduser", "\n")
+  # cat("in: ", "adduser", "\n")
   tryCatch({
     query <-
       paste0(
@@ -135,7 +135,7 @@ updateUserFromListByID <- function(db = DB_POOL, values) {
 
 # read user
 getUser <- function(db = DB_POOL, username = "") {
-  cat("in: ", "readuser", "\n")
+  # cat("in: ", "readuser", "\n")
   query <-
     paste0("SELECT * FROM User WHERE `username`  = '", username, "'")
   dbGetQuery(conn = db, query)
@@ -143,7 +143,7 @@ getUser <- function(db = DB_POOL, username = "") {
 
 # get userById
 getUserById <- function(db = DB_POOL, id) {
-  cat("in: ", "geruserbyid", "\n")
+  # cat("in: ", "geruserbyid", "\n")
   df <-
     dbGetQuery(db, paste0("select * from User where id = " , id))
   return(df)
@@ -151,7 +151,7 @@ getUserById <- function(db = DB_POOL, id) {
 
 # get user id from username
 getUserId <- function(db = DB_POOL, username) {
-  cat("in: ", "getuserid", "\n")
+  # cat("in: ", "getuserid", "\n")
   user.id <-
     dbGetQuery(db,
                paste0(
@@ -165,13 +165,13 @@ getUserId <- function(db = DB_POOL, username) {
 
 # get all users
 getUsers <- function(db = DB_POOL) {
-  cat("in: ", "getUsers", "\n")
+  # cat("in: ", "getUsers", "\n")
   df <- dbGetQuery(db, 'select id, username, email from User')
   return(df)
 }
 
 userExists <- function(db = DB_POOL, username = "") {
-  cat("in: ", "userexists", "\n")
+  # cat("in: ", "userexists", "\n")
   user <- getUser(db, username = username)
   if (is.na(user$username[1]))
     return(FALSE)
@@ -182,7 +182,7 @@ userExists <- function(db = DB_POOL, username = "") {
 credentialsMatch <- function(db = DB_POOL,
                              username = "",
                              password = '') {
-  cat("in: ", "credentialsmatch", "\n")
+  # cat("in: ", "credentialsmatch", "\n")
   a <- getUser(db, username = username)
 
   if (is.na(a$username[1])) {
@@ -212,7 +212,7 @@ credentialsMatch <- function(db = DB_POOL,
 isAdmin <- function(db = DB_POOL,
                     username = "",
                     password = '') {
-  cat("in: ", "isadmin", "\n")
+  # cat("in: ", "isadmin", "\n")
   a <- getUser(db, username = username)
 
   if (is.null(username) ||

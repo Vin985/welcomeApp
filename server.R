@@ -38,11 +38,17 @@ shinyServer(function(input, output, session) {
 
   userInfo <- reactiveValues()
   userInfo$selectedApp <- NULL
-  userInfo$logged <- FALSE
-  userInfo$admin <- FALSE
+  userInfo$user <- NULL
+
+  queryArgs <- getInfoFromQueryString(parseQueryString(isolate(session$clientData$url_search)))
+  if (!is.null(queryArgs)) {
+    lang <- queryArgs$lang
+    user <- queryArgs$user
+  }
+  userInfo$lang <- lang
+  userInfo$user <- user
 
   # Language handlers
-  checkQueryLanguage(session, userInfo)
   changeLanguageHandler(input, userInfo, event = CHANGE_LANG_EVENT)
   output$changeLanguage <- renderUI({
     changeLanguageOutput(userInfo$lang, button = TRUE)
@@ -66,12 +72,8 @@ shinyServer(function(input, output, session) {
   observeEvent(input$goToApp, {
     app <- isolate(userInfo$selectedApp)
     lang <- isolate(userInfo$lang)
-    js <-
-      paste0("window.location = '",
-             EC_APP_CONF[[app]]$url,
-             "?lang=",
-             lang ,
-             "';")
+    user <- isolate(userInfo$user)
+    js <- generateApplicationURL(app, lang, user)
     runjs(js)
   })
 

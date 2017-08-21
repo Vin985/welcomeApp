@@ -29,23 +29,38 @@ loginServer <- function(input, output, session, userInfo) {
   loginRender(input, output, session, userInfo)
 
   observeEvent(input$login, {
-    showModal(div(class="login", loginModal(userInfo)))
+    showModal(div(class = "login", loginModal(userInfo)))
   })
 
 
   #==============================================================================================================================================
   ## logout
   #
-  observeEvent(input$logoutbutton, {
-    userInfo$logged <- FALSE
-    userInfo$admin  <- FALSE
-    # stop("'session' is not a ShinySession object.")
+  observeEvent(input$logout, {
+    userInfo$user <- NULL
   })
 
+  observeEvent(input$checkCredentials, {
+    print("in observe loginAction")
+    if (!isLogged(isolate(userInfo$user))) {
+
+      username <- isolate(input$userName)
+      password <- isolate(input$passwd)
+
+      creds <- credentialsMatch(username = username, password = password)
+
+      if (creds > 0) {
+        user <- list(status = creds, name = username, token = generateUserStatus(creds))
+        userInfo$user <- user
+        removeModal(session)
+      } else {
+        userInfo$loginError <- creds
+      }
+    }
+  }, ignoreInit = TRUE)
 
 
   observeEvent(input$navBarPageUser, {
-    #if (! input$navBarPageUser %in% c("Se déconnecter", "Disconnect")){
     if (input$navBarPageUser != '<span id="disconnect" class="shiny-text-output"></span>') {
       return()
     }
@@ -58,49 +73,28 @@ loginServer <- function(input, output, session, userInfo) {
   })
 
 
-  # observeEvent(input$navBarPageAdmin, {
-  #   print("input$navBarPageAdmin = ")
-  #   print(input$navBarPageAdmin)
-  #   if (!(input$navBarPageAdmin %in% c(encode("Se déconnecter"), encode("Gérer les utilisateurs")))){
-  #     return()
-  #   }
-  #
-  #   isolate({
-  #     if (input$navBarPageAdmin != encode("Se déconnecter")){
-  #         USER$Logged = FALSE
-  #         stop("'session' is not a ShinySession object.")
-  #     }
-  #     #else{
-  #     #  return("admin")
-  #     #}
-  #   })
-  # })
+  observeEvent(input$adminPage, {
+    print("input$adminPage = ")
+    if (!(input$navBarPageAdmin %in% c(encode("Se déconnecter"), encode("Gérer les utilisateurs")))){
+      return()
+    }
+
+    isolate({
+      if (input$navBarPageAdmin != encode("Se déconnecter")){
+          USER$Logged = FALSE
+          stop("'session' is not a ShinySession object.")
+      }
+      #else{
+      #  return("admin")
+      #}
+    })
+  })
 
   #==============================================================================================================================================
   ## login
   #
 
-  observeEvent(input$loginAction, {
-    print("in observe loginAction")
-    if (!isolate(userInfo$logged)) {
 
-      username <- isolate(input$userName)
-      password <- isolate(input$passwd)
-
-      creds <- credentialsMatch(username = username, password = password)
-
-      if (creds > 0) {
-        userInfo$logged <- TRUE
-        userInfo$username <- username
-        if (creds == 2) {
-          userInfo$admin <- TRUE
-        }
-        removeModal(session)
-      } else {
-        userInfo$loginError <- creds
-      }
-    }
-  }, ignoreInit = TRUE)
 
 
 }
@@ -108,20 +102,20 @@ loginServer <- function(input, output, session, userInfo) {
 loginRender <- function(input, output, session, userInfo) {
 
   output$login <- renderUI({
-    if (!userInfo$logged) {
+    if (!isLogged(userInfo$user)) {
       actionLink("login", geti18nValue("login", userInfo$lang))
     } else {
-      username <- isolate(userInfo$username)
+      username <- isolate(userInfo$user$name)
       if (is.null(username)) {
         username <- ""
       }
-      tagList(textOutput2(content = paste(geti18nValue("welcome.user", userInfo$lang), username)),
-              if (userInfo$admin) {
-                actionLink("adminPage", geti18nValue("admin.page", userInfo$lang))
-              } else {
-                ""
-              },
-              actionLink("logout", geti18nValue("logout", userInfo$lang)))
+      tagList(textOutput2(content = paste(geti18nValue("welcome.user", userInfo$lang), username), inline = TRUE, class = "link"),
+              # if (isAdmin(userInfo$user)) {
+              #   span(class = "link", actionLink("adminPage", geti18nValue("admin.page", userInfo$lang)))
+              # } else {
+              #   ""
+              # },
+              span(class = "link", actionLink("logout", geti18nValue("logout", userInfo$lang))))
     }
   })
 
@@ -132,7 +126,6 @@ loginRender <- function(input, output, session, userInfo) {
       span(geti18nValue(paste0("login.error", error), userInfo$lang), class = "text-danger")
     }
   })
-
 
   #=============================================================================================================================================
   ## Change password button: loginErrorChangePassword

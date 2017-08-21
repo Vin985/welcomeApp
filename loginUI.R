@@ -100,7 +100,7 @@ loginModal <- function(userInfo) {
         ),
         passwordEncryptedInput("passwd", geti18nValue("password", userInfo$lang)),
         br(),
-        actionButton("loginAction", geti18nValue("login", userInfo$lang), class = "btn btn-primary action-button login loginmodal-submit"),
+        actionButton("checkCredentials", geti18nValue("login", userInfo$lang), class = "btn btn-primary action-button login loginmodal-submit"),
         htmlOutput("loginError")
       )
     ),

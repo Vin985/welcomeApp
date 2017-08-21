@@ -2,16 +2,19 @@ require(shiny)
 require(shinyjs)
 require(ecapputils)
 
+# Generate application selection links
 generateApplicationLinks <- function(userInfo) {
   if (!is.null(EC_APP_CONF)) {
     lapply(names(EC_APP_CONF), function(x, userInfo) {
-      if (as.logical(!EC_APP_CONF[[x]]$private) || userInfo$logged) {
+      # Display buttons if application is public or if user is logged in
+      if (x != "main" && (!EC_APP_CONF[[x]]$private || isLogged(userInfo$user))) {
         actionButton(paste0(x, "App"), geti18nValue(paste0(x, ".app"), userInfo$lang), class = "appLink btn-block text-capitalize h2")
       }
     }, userInfo)
   }
 }
 
+## Language selection page
 selectLanguagePage <- function(input, output, session, userInfo) {
   lang <- userInfo$lang
   output$main <- renderUI({
@@ -45,19 +48,20 @@ selectLanguagePage <- function(input, output, session, userInfo) {
   })
 }
 
+## Application selection page
 selectApplicationPage <-
   function(input, output, session, userInfo) {
 
+    # Toolbar
     output$toolBar <- renderUI({
       fluidRow(class = "topRow",
-               column(8, offset = 1),
-               column(2, class = "navButtons",
-                      tagList(
-                        uiOutput("login"),
+               column(9, offset = 1, uiOutput(class = "loginButtons", "login")),
+               column(1, class = "navButtons",
                         uiOutput("changeLanguage")
-                      )))
+                      ))
     })
 
+    # global Layout
     output$main <- renderUI({
       tagList(
         uiOutput("toolBar"),
@@ -73,6 +77,7 @@ selectApplicationPage <-
       )
     })
 
+    # Application description
     output$appDesc <- renderUI({
       app <- userInfo$selectedApp
       msg <- if (is.null(app)) {
