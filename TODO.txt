@@ -1,0 +1,4 @@
+Geoavirweb : dependences shiny dans html
+
+Urgences: faire le retour a la page d'accueil.
+          transmission des informations dans un sens et l'autre
