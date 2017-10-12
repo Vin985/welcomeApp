@@ -7,16 +7,13 @@
 library(shiny)
 
 
-
-
-
-
 ## Select page to display depending on if language has been selected or not
 selectPage <- function(input, output, session, userInfo) {
-  if (is.null(isolate(userInfo$lang))) {
-    selectLanguagePage(input, output, session, userInfo)
-  } else {
-    selectApplicationPage(input, output, session, userInfo)
+  page <- isolate(userInfo$page)
+  if (page == PAGE_APP) {
+    displayApplicationPage(input, output, session, userInfo)
+  } else if (page == PAGE_ADMIN){
+    displayAdminPage(input, output, session, userInfo)
   }
 }
 
@@ -38,7 +35,8 @@ shinyServer(function(input, output, session) {
 
   userInfo <- reactiveValues()
   userInfo$selectedApp <- NULL
-  userInfo$user <- NULL
+  #userInfo$user <- NULL
+  userInfo$page <- PAGE_LANG
 
   queryArgs <- getInfoFromQueryString(parseQueryString(isolate(session$clientData$url_search)))
   if (!is.null(queryArgs)) {
@@ -46,6 +44,9 @@ shinyServer(function(input, output, session) {
     user <- queryArgs$user
   }
   userInfo$lang <- lang
+
+  user <- list(status = 2, name = "sylvain")
+
   userInfo$user <- user
 
   # Language handlers
@@ -59,12 +60,22 @@ shinyServer(function(input, output, session) {
 
   # login logic
   loginServer(input, output, session, userInfo)
+  adminServer(input, output, session, userInfo)
+
+  # display language selection page at the beginning
+  displayLanguagePage(input, output, session, userInfo)
+
+
+  observeEvent(userInfo$page, {
+    selectPage(input, output, session, userInfo)
+  })
 
   # Change page observer
-  observe({
-    # This line is needed to make sure the observe is rerun when the language change
-    userInfo$lang
-    selectPage(input, output, session, userInfo)
+  observeEvent(userInfo$event, {
+    event <- isolate(userInfo$event)
+    if (event$type == CHANGE_LANG_EVENT && userInfo$page == PAGE_LANG) {
+        userInfo$page <- PAGE_APP
+    }
   })
 
 

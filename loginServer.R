@@ -1,4 +1,3 @@
-source("loginUI.R", encoding = "utf-8")
 # source("sqlite3.R")
 
 #=============================================================================================================================================
@@ -22,6 +21,13 @@ isEmailValid <- function(emailToBeChecked) {
     emailToBeChecked,
     ignore.case = TRUE
   ) == TRUE
+}
+
+isAdmin <- function(user) {
+  if (is.null(user)) {
+    return(FALSE)
+  }
+  return(user$status == STATUS_ADMIN)
 }
 
 loginServer <- function(input, output, session, userInfo) {
@@ -74,20 +80,12 @@ loginServer <- function(input, output, session, userInfo) {
 
 
   observeEvent(input$adminPage, {
-    print("input$adminPage = ")
-    if (!(input$navBarPageAdmin %in% c(encode("Se déconnecter"), encode("Gérer les utilisateurs")))){
-      return()
-    }
+    userInfo$page <- PAGE_ADMIN
+    #displayAdminPage(input, output, session, userInfo)
+  })
 
-    isolate({
-      if (input$navBarPageAdmin != encode("Se déconnecter")){
-          USER$Logged = FALSE
-          stop("'session' is not a ShinySession object.")
-      }
-      #else{
-      #  return("admin")
-      #}
-    })
+  observeEvent(input$appPage, {
+    userInfo$page <- PAGE_APP
   })
 
   #==============================================================================================================================================
@@ -101,7 +99,7 @@ loginServer <- function(input, output, session, userInfo) {
 
 loginRender <- function(input, output, session, userInfo) {
 
-  output$login <- renderUI({
+  output$loginButtons <- renderUI({
     if (!isLogged(userInfo$user)) {
       actionLink("login", geti18nValue("login", userInfo$lang))
     } else {
@@ -109,12 +107,15 @@ loginRender <- function(input, output, session, userInfo) {
       if (is.null(username)) {
         username <- ""
       }
+      adminPage <- if (isAdmin(userInfo$user)) {
+        if (userInfo$page == PAGE_APP) {
+        span(class = "link", actionLink("adminPage", geti18nValue("admin.page", userInfo$lang)))
+      } else {
+        span(class = "link", actionLink("appPage", geti18nValue("app.page", userInfo$lang)))
+      }
+      }
       tagList(textOutput2(content = paste(geti18nValue("welcome.user", userInfo$lang), username), inline = TRUE, class = "link"),
-              # if (isAdmin(userInfo$user)) {
-              #   span(class = "link", actionLink("adminPage", geti18nValue("admin.page", userInfo$lang)))
-              # } else {
-              #   ""
-              # },
+              adminPage,
               span(class = "link", actionLink("logout", geti18nValue("logout", userInfo$lang))))
     }
   })
@@ -170,93 +171,6 @@ loginRender <- function(input, output, session, userInfo) {
 
   })
 
-
-  #==============================================================================================================================================
-  ## Admin section
-  output$loginSection <- renderUI({
-    if (USER$Logged == FALSE) {
-      return(uiLoginMOdalDialog())
-    }
-
-    if (isAdmin(USER$username, USER$password)) {
-      div(
-        class = "container",
-        div(
-          class = "row",
-          div(
-            class = "col-sm-12 col-md-12 col-lg-12",
-            shinyjs::useShinyjs(),
-
-            # display cRUD ops errors
-            htmlOutput("crudErrors")#,
-
-            #data table
-            #DT::dataTableOutput("responses")
-          )
-        ),
-
-        div(
-          class = "row",
-          div(class = "col-sm-6 col-md-5 col-lg-6", tags$hr())
-        ),
-
-        div(
-          class = "row",
-          div(
-            class = "col-sm-12 col-md-12 col-lg-12",
-            #input fields
-            shinyjs::disabled(textInput("id", "Id", "0")),
-
-            #shinyjs::disabled(textInput("username", "Nom utilisateur", "")),
-            textInput("username", geti18nValue("username", userInfo$lang), ""),
-            textInput("email", geti18nValue("email", userInfo$lang), ""),
-            passwordEncryptedInput("password", geti18nValue("password", userInfo$lang), "")
-            #passwordEncryptedInput("password2", encode("Répéter le mot de passe"), "")
-          )
-        ),
-
-        div(
-          class = "row",
-          div(class = "col-sm-6 col-md-5 col-lg-6", tags$hr())
-        ),
-
-        div(
-          class = "row",
-          div(
-            class = "col-sm-12 col-md-12 col-lg-12",
-            #action buttons
-            actionButtonStyled(
-              'submit',
-              geti18nValue("account.create.update", userInfo$lang),
-              style = "width:300px;",
-              class = "btn btn-info action-button btn-lg"
-            ),
-            actionButtonStyled(
-              'new',
-              geti18nValue("account.init", userInfo$lang),
-              style = "width:300px;",
-              class = "btn btn-success action-button btn-lg"
-            ),
-            actionButtonStyled(
-              'delete',
-              geti18nValue("account.delete", userInfo$lang),
-              style = "width:300px;",
-              class = "btn btn-danger action-button btn-lg"
-            )
-          )
-        )
-      )
-
-    } else{
-      print("----------- not admin")
-      #USER$AdminTry <- TRUE
-      #USER$Logged   <- FALSE
-
-      return(uiLoginMOdalDialog(error = geti18nValue("login.error4", userInfo$lang)))
-
-    }
-
-  })
 }
 
 

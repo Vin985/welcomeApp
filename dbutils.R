@@ -1,4 +1,7 @@
-
+STATUS_GUEST <- 0
+STATUS_USER <- 1
+STATUS_ADMIN <- 2
+STATUS_ERROR <- -1
 
 # create table user
 createTableUser <- function(db = DB_POOL) {
@@ -36,8 +39,7 @@ initDB <- function(dbdir, dbfile) {
 }
 
 # add user with email
-addUser <- function(db = DB_POOL,
-                    username = "",
+addUser <- function(username = "",
                     email = "",
                     password = "") {
   # cat("in: ", "adduser", "\n")
@@ -59,7 +61,7 @@ addUser <- function(db = DB_POOL,
 }
 
 # createNewUserFromList
-addUsersFromList <- function(db = DB_POOL, values) {
+addUsersFromList <- function(db = DB_POOL) {
   addUser(db,
           username = values["username"],
           email = values["email"],
@@ -68,7 +70,7 @@ addUsersFromList <- function(db = DB_POOL, values) {
 
 
 # delete user
-deleteUserByUsername <- function(db = DB_POOL, username = "") {
+deleteUserByUsername <- function(username = "", db = DB_POOL) {
   tryCatch({
     dbExecute(conn = db,
               paste0("DELETE FROM User where username='", username, "'"))
@@ -79,7 +81,7 @@ deleteUserByUsername <- function(db = DB_POOL, username = "") {
 
 
 # delete user by ID
-deleteUserByID <- function(db = DB_POOL, id) {
+deleteUserByID <- function(id, db = DB_POOL) {
   tryCatch({
     dbExecute(conn = db,
               paste0("DELETE FROM User where id= ", id, " ;"))
@@ -91,10 +93,10 @@ deleteUserByID <- function(db = DB_POOL, id) {
 
 
 # change user information
-updateUser <- function(db = DB_POOL,
-                       username = "",
+updateUser <- function(username = "",
                        email = "",
-                       password = "") {
+                       password = "",
+                       db = DB_POOL) {
   cat("in: ", "updateuser", "\n")
   tryCatch({
     q <-
@@ -115,7 +117,7 @@ updateUser <- function(db = DB_POOL,
 
 
 # update user from list
-updateUserFromListByID <- function(db = DB_POOL, values) {
+updateUserFromListByID <- function(values, db = DB_POOL) {
   #cat("data to update*:  ", "email: ", values["email"], " password: ", values["password"], " username: ", values["username"],"\n")
   q <- paste0(
     "UPDATE User SET `email` = '",
@@ -134,7 +136,7 @@ updateUserFromListByID <- function(db = DB_POOL, values) {
 
 
 # read user
-getUser <- function(db = DB_POOL, username = "") {
+getUser <- function(username = "", db = DB_POOL) {
   # cat("in: ", "readuser", "\n")
   query <-
     paste0("SELECT * FROM User WHERE `username`  = '", username, "'")
@@ -142,7 +144,7 @@ getUser <- function(db = DB_POOL, username = "") {
 }
 
 # get userById
-getUserById <- function(db = DB_POOL, id) {
+getUserById <- function(id, db = DB_POOL) {
   # cat("in: ", "geruserbyid", "\n")
   df <-
     dbGetQuery(db, paste0("select * from User where id = " , id))
@@ -150,7 +152,7 @@ getUserById <- function(db = DB_POOL, id) {
 }
 
 # get user id from username
-getUserId <- function(db = DB_POOL, username) {
+getUserId <- function(username, db = DB_POOL) {
   # cat("in: ", "getuserid", "\n")
   user.id <-
     dbGetQuery(db,
@@ -170,7 +172,7 @@ getUsers <- function(db = DB_POOL) {
   return(df)
 }
 
-userExists <- function(db = DB_POOL, username = "") {
+userExists <- function(username = "", db = DB_POOL) {
   # cat("in: ", "userexists", "\n")
   user <- getUser(db, username = username)
   if (is.na(user$username[1]))
@@ -179,53 +181,32 @@ userExists <- function(db = DB_POOL, username = "") {
 }
 
 # check username/password match
-credentialsMatch <- function(db = DB_POOL,
-                             username = "",
-                             password = '') {
+credentialsMatch <- function(username = "",
+                             password = '',
+                             db = DB_POOL) {
   # cat("in: ", "credentialsmatch", "\n")
   a <- getUser(db, username = username)
 
   if (is.na(a$username[1])) {
     # User does not exist
-    return(0)
+    return(STATUS_GUEST)
   }
 
   # Check credentials
   if (username == a$username[1] & password == a$password[1]) {
     if (a$admin == 1) {
       # User is admin
-      return(2)
+      return(STATUS_ADMIN)
     } else {
       # Normal user
-      return(1)
+      return(STATUS_USER)
     }
   } else {
     # Wrong password
-    return(-1)
+    return(STATUS_ERROR)
   }
 
 }
-
-##
-# check if the user is admin
-#
-isAdmin <- function(db = DB_POOL,
-                    username = "",
-                    password = '') {
-  # cat("in: ", "isadmin", "\n")
-  a <- getUser(db, username = username)
-
-  if (is.null(username) ||
-      is.na(a$username[1]) || username != a$username[1])
-    return(FALSE)
-
-
-  if (a$admin == 1)
-    return(TRUE)
-  else
-    return(FALSE)
-}
-
 
 ##
 ## Create database pool
@@ -236,4 +217,3 @@ if (!exists("DB_DIR") || !exists("DB_FILE")) {
   )
 }
 DB_POOL <- initDB(DB_DIR, DB_FILE)
-
