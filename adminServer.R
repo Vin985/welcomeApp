@@ -7,41 +7,43 @@ adminServer <- function(input, output, session, userInfo) {
   #
   # input fields are treated as a group
   formData <- reactive({
-    sapply(names(GetTableMetadata()$fields), function(x)
+    sapply(names(getTableMetadata()$fields), function(x)
       input[[x]])
   })
+
+  userList <- reactiveVal(getUsers())
 
   # Click "Submit" button -> save data
   observeEvent(input$submit, {
     if (input$id != "0") {
       # it is a selected account to be updated
-      UpdateData(formData())
+      updateData(formData(), userList)
     } else {
       # create new user
-      CreateData(formData())
-      UpdateInputs(CreateDefaultRecord(), session)
+      createData(formData(), userList)
+      updateInputs(createDefaultRecord(), session)
     }
   }, priority = 1)
 
 
   # Press "New" button -> display empty record
-  observeEvent(input$new, {
-    UpdateInputs(CreateDefaultRecord(), session)
+  observeEvent(input$reset, {
+    updateInputs(createDefaultRecord(), session)
   })
 
 
   # Press "Delete" button -> delete from data
   observeEvent(input$delete, {
-    DeleteData(formData())
-    UpdateInputs(CreateDefaultRecord(), session)
+    deleteData(formData(), userList, output)
+    updateInputs(createDefaultRecord(), session)
   }, priority = 1)
 
 
   # Select row in table -> show details in inputs
   observeEvent(input$responses_rows_selected, {
     if (length(input$responses_rows_selected) > 0) {
-      data <- ReadData()[input$responses_rows_selected,]
-      UpdateInputs(data, session)
+      data <- userList()[input$responses_rows_selected,]
+      updateInputs(data, session)
     }
 
   })
@@ -51,56 +53,41 @@ adminServer <- function(input, output, session, userInfo) {
   output$responses <- DT::renderDataTable({
     # require the presence of "responses" id
     req(isAdmin(userInfo$user))
-    #update after submit is clicked
-    input$submit
-    #update after delete is clicked
-    input$delete
-    d <- ReadData()
+    d <- userList()
   }, server = FALSE, selection = "single",
-  colnames = unname(GetTableMetadataToDisplayInTable()$fields))
+  colnames = unname(getTableMetadataToDisplayInTable()$fields))
 }
-
-# output$uploadedFileContent <- DT::renderDataTable(DT::datatable(
-#   reactiveDataVisualizeContent(),
-#   options = list(
-#     orderClasses = TRUE,
-#     lengthMenu = c(5, 10, 20, 30, 50),
-#     pageLength = 5
-#   )
-#
 
 
 #==============================================================================================================================================
 ## CRUD helpers
 # data is of type list: list(id = "", username = "", password = "", email = "")
-CastData <- function(data) {
-  datar <- data.frame(
-    id = data["id"],
-    username = data["username"],
-    #password = data["password"],
-    email = data["email"],
-    stringsAsFactors = FALSE
-  )
-  return (datar)
+castData <- function(data, pwd = TRUE) {
+  if (!pwd) {
+    data <- data[!names(data) %in% c("password")]
+  }
+  datar <- data.frame(as.list(data), stringsAsFactors = FALSE)
+  return(datar)
 }
 
 
-CreateDefaultRecord <- function() {
+createDefaultRecord <- function() {
   mydefault <-
-    CastData(list(
+    castData(list(
       id = "0",
       username = "",
       password = "",
       email = ""
     ))
-  return (mydefault)
+  return(mydefault)
 }
 
 
-UpdateInputs <- function(data, session) {
-  updateTextInput(session, "id", value = unname(data["id"]))
-  updateTextInput(session, "username", value = unname(data["username"]))
-  updateTextInput(session, "email", value = unname(data["email"]))
+updateInputs <- function(data, session) {
+  updateTextInput(session, "id", value = data$id)
+  updateTextInput(session, "username", value = data$username)
+  updateTextInput(session, "email", value = data$email)
+  updateTextInput(session, "password", value = data$password)
 }
 
 
@@ -108,62 +95,42 @@ UpdateInputs <- function(data, session) {
 ## CRUD ops
 #
 
-CreateData <- function(data) {
+createData <- function(data, userList) {
   # save data to database
-  createNewUserFromListe(data)
-
+  addUserFromList(data)
   # add the data to the datatable responses (DT::dataTableOutput)
-  data <- CastData(data)
-
-  if (exists("responses")) {
-    responses <<- rbind(responses, data)
-  } else {
-    responses <<- data
-  }
+  userList(getUsers())
 }
 
 
-ReadData <- function() {
-  getUsers()
-}
 
-
-UpdateData <- function(data) {
+updateData <- function(data, userList) {
   # update the user data row in the DB
   updateUserFromListByID(data)
-
-  responses <<- data
+  userList(getUsers())
 }
 
 
-DeleteData <- function(data) {
+deleteData <- function(data, userList, output) {
   # delete from DB
-  user <- getUSerById(data["id"])
+  user <- getUserById(data["id"])
 
   if (user["admin"] == 1) {
     output$crudErrors <- renderUI({
       span("Opération non autorisée. Un compte administrateur ne peut être supprimé.",
            class = "text-danger")
     })
-  }
-  else{
+  } else {
     output$crudErrors <- renderUI({
-
     })
-    deleteUserByID(data["id"])
 
-    # update the datatable responses (DT::dataTableOutput)
-    if (exists("responses")) {
-      responses <<-
-        responses[row.names(responses) != unname(data["id"]),]
-    } else {
-      responses <<- data
-    }
+    deleteUserByID(data["id"])
+    userList(getUsers())
   }
 
 }
 
-GetTableMetadata <- function() {
+getTableMetadata <- function() {
   fields <- c(
     id = "Id",
     username = "username",
@@ -171,15 +138,15 @@ GetTableMetadata <- function() {
     email = "email"
   )
   result <- list(fields = fields)
-  return (result)
+  return(result)
 }
 
 # password field is not displayed
-GetTableMetadataToDisplayInTable <- function() {
+getTableMetadataToDisplayInTable <- function() {
   fields <- c(id = "Id",
               username = "username",
               #password = "password",
               email = "email")
   result <- list(fields = fields)
-  return (result)
+  return(result)
 }

@@ -66,19 +66,6 @@ loginServer <- function(input, output, session, userInfo) {
   }, ignoreInit = TRUE)
 
 
-  observeEvent(input$navBarPageUser, {
-    if (input$navBarPageUser != '<span id="disconnect" class="shiny-text-output"></span>') {
-      return()
-    }
-
-    isolate({
-      USER$Logged <- FALSE
-      USER$Admin <- FALSE
-      stop("'session' is not a ShinySession object.")
-    })
-  })
-
-
   observeEvent(input$adminPage, {
     userInfo$page <- PAGE_ADMIN
     #displayAdminPage(input, output, session, userInfo)

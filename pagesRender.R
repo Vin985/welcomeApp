@@ -136,7 +136,7 @@ displayAdminPage <- function(input, output, session, userInfo) {
               class = "btn btn-info action-button btn-lg btn-30"
             ),
             actionButtonStyled(
-              'new',
+              'reset',
               geti18nValue("account.init", userInfo$lang),
               class = "btn btn-success action-button btn-lg btn-30"
             ),
@@ -149,8 +149,7 @@ displayAdminPage <- function(input, output, session, userInfo) {
         )
       ))
     } else{
-      print("----------- not admin")
-      return(uiLoginMOdalDialog(error = geti18nValue("login.error4", userInfo$lang)))
+      userInfo$page <- PAGE_APP
     }
   })
 

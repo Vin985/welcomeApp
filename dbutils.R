@@ -41,7 +41,7 @@ initDB <- function(dbdir, dbfile) {
 # add user with email
 addUser <- function(username = "",
                     email = "",
-                    password = "") {
+                    password = "", db = DB_POOL) {
   # cat("in: ", "adduser", "\n")
   tryCatch({
     query <-
@@ -61,7 +61,7 @@ addUser <- function(username = "",
 }
 
 # createNewUserFromList
-addUsersFromList <- function(db = DB_POOL) {
+addUserFromList <- function(values, db = DB_POOL) {
   addUser(db,
           username = values["username"],
           email = values["email"],
