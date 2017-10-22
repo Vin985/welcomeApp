@@ -23,13 +23,6 @@ isEmailValid <- function(emailToBeChecked) {
   ) == TRUE
 }
 
-isAdmin <- function(user) {
-  if (is.null(user)) {
-    return(FALSE)
-  }
-  return(user$status == STATUS_ADMIN)
-}
-
 loginServer <- function(input, output, session, userInfo) {
 
   loginRender(input, output, session, userInfo)

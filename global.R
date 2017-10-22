@@ -14,12 +14,12 @@ ROOT_DIR <- "C:/dev/EC/welcomeApp"
 
 DB_DIR <- file.path(ROOT_DIR, "db")
 DB_FILE <- "User.sqlite"
+createDBPool()
 
 source(file.path(ROOT_DIR, "pagesRender.R"))
 source(file.path(ROOT_DIR, "loginUI.R"), encoding = "UTF-8")
 source(file.path(ROOT_DIR, "loginServer.R"), encoding = "UTF-8")
 source(file.path(ROOT_DIR, "adminServer.R"), encoding = "UTF-8")
-source(file.path(ROOT_DIR, "dbutils.R"), encoding = "UTF-8")
 
 
 PAGE_ADMIN <- "admin"
