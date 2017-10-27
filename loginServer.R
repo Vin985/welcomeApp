@@ -49,7 +49,7 @@ loginServer <- function(input, output, session, userInfo) {
       creds <- credentialsMatch(username = username, password = password)
 
       if (creds > 0) {
-        user <- list(status = creds, name = username, token = generateUserStatus(creds))
+        user <- list(status = creds, name = username, time = as.numeric(Sys.time()))
         userInfo$user <- user
         removeModal(session)
       } else {

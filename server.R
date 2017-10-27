@@ -45,8 +45,6 @@ shinyServer(function(input, output, session) {
   }
   userInfo$lang <- lang
 
-  user <- list(status = 2, name = "sylvain")
-
   userInfo$user <- user
 
   # Language handlers
