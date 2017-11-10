@@ -1,6 +1,8 @@
 # install.packages("DBI")
 # devtools::install_github("rstudio/pool")
 
+rm(list = ls())
+
 library(ecapputils)
 library(shinyjs)
 library(DBI)

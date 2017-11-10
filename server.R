@@ -45,6 +45,10 @@ shinyServer(function(input, output, session) {
   }
   userInfo$lang <- lang
 
+  # user$time <- as.numeric(Sys.time())
+  # user$name <- "sylvain"
+  # user$status <- 2
+
   userInfo$user <- user
 
   # Language handlers

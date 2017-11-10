@@ -10,6 +10,7 @@ library(shiny)
 
 shinyUI(fluidPage(
   useShinyjs(),
+  uiLoginHeader(),
   includeCSS("www/css/styles.css"),
   uiOutput("showlogin"),
   uiOutput("toolBar"),
