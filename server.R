@@ -1,5 +1,5 @@
 # This is the server logic for a Shiny web application.
-# You c an find out more about building applications with Shiny here:
+# You can find out more about building applications with Shiny here:
 #
 # http://shiny.rstudio.com
 #
