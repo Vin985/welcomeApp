@@ -12,7 +12,7 @@ selectPage <- function(input, output, session, userInfo) {
   page <- isolate(userInfo$page)
   if (page == PAGE_APP) {
     displayApplicationPage(input, output, session, userInfo)
-  } else if (page == PAGE_ADMIN){
+  } else if (page == PAGE_ADMIN) {
     displayAdminPage(input, output, session, userInfo)
   }
 }
@@ -21,7 +21,7 @@ selectPage <- function(input, output, session, userInfo) {
 ## Generate the observers for the application buttons
 selectAppHandler <- function(input, output, session, userInfo) {
   # use lapply because it doesn't seem to work with a for loop
-  lapply(APP_URL$id, function(x, input, lang) {
+  lapply(names(EC_APP_CONF), function(x, input, lang) {
     observeEvent(input[[paste0(x, "App")]], {
       userInfo$selectedApp <- x
     })
@@ -32,18 +32,26 @@ selectAppHandler <- function(input, output, session, userInfo) {
 
 ## Main function
 shinyServer(function(input, output, session) {
-
   userInfo <- reactiveValues()
   userInfo$selectedApp <- NULL
-  #userInfo$user <- NULL
+  userInfo$user <- NULL
   userInfo$page <- PAGE_LANG
 
-  queryArgs <- getInfoFromQueryString(parseQueryString(isolate(session$clientData$url_search)))
+  lang <- NULL
+  user <- NULL
+  queryArgs <-
+    getInfoFromQueryString(parseQueryString(isolate(session$clientData$url_search)))
   if (!is.null(queryArgs)) {
     lang <- queryArgs$lang
     user <- queryArgs$user
   }
   userInfo$lang <- lang
+
+  if (is.null(lang)) {
+    applicationObserver("main", input, "fr", user)
+  } else {
+    userInfo$page <- PAGE_APP
+  }
 
   # user$time <- as.numeric(Sys.time())
   # user$name <- "sylvain"
@@ -75,8 +83,9 @@ shinyServer(function(input, output, session) {
   # Change page observer
   observeEvent(userInfo$event, {
     event <- isolate(userInfo$event)
-    if (event$type == CHANGE_LANG_EVENT && userInfo$page == PAGE_LANG) {
-        userInfo$page <- PAGE_APP
+    if (event$type == CHANGE_LANG_EVENT &&
+        userInfo$page == PAGE_LANG) {
+      userInfo$page <- PAGE_APP
     }
   })
 

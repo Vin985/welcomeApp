@@ -38,5 +38,9 @@ CHANGE_PAGE_EVENT <- "EVENT_changePage"
 
 readAppConf(file.path(ROOT_DIR, ".."))
 
-APP_URL <- read.csv2("appconf.csv", stringsAsFactors = FALSE,
-                     encoding = "UTF-8")
+onStop(function(){
+  poolClose(DB_POOL)
+})
+
+# APP_URL <- read.csv2("appconf.csv", stringsAsFactors = FALSE,
+#                      encoding = "UTF-8")
